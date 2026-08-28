@@ -39,11 +39,11 @@ function LoginForm() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    const supabase = createClient()
     setIsLoading(true)
     setError(null)
 
     try {
+      const supabase = createClient()
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -51,7 +51,7 @@ function LoginForm() {
       if (error) throw error
       const staffEmails = new Set(['www.atuchukwuarinze@gmail.com','stevearinze594@gmail.com','fxchristopher96@gmail.com'])
       const normalizedEmail = email.trim().toLowerCase()
-      const isStaffDestination = redirectedFrom === '/support' || redirectedFrom === '/affiliate' || redirectedFrom === '/admin' || redirectedFrom.startsWith('/admin/')
+      const isStaffDestination = redirectedFrom === '/support' || redirectedFrom === '/affiliate' || redirectedFrom === '/admin' || Boolean(redirectedFrom?.startsWith('/admin/'))
       const destination = isStaffDestination && staffEmails.has(normalizedEmail) ? '/affiliate' : (redirectedFrom || '/')
       router.push(destination)
       router.refresh()
