@@ -1,0 +1,1 @@
+// This file is deprecated. Please use src/supabase/realtime/use-collection.tsx instead.
