@@ -39,11 +39,14 @@ function LoginForm() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    const supabase = createClient()
     setIsLoading(true)
     setError(null)
 
     try {
+      if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+        throw new Error('Supabase login is not configured for this preview.')
+      }
+      const supabase = createClient()
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
