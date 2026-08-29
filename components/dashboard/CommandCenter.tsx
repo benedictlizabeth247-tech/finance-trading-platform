@@ -19,6 +19,7 @@ export function CommandCenter({ wallet, loading, usdRate }: CommandCenterProps) 
   const [showBalance, setShowBalance] = useState(true)
 
   const displayBalance = wallet?.available || 0
+  const usdBalance = convertToUsd(displayBalance, 'NGN', usdRate)
 
   return (
     <div className="-mx-4 mb-5 w-[calc(100%+2rem)]">
@@ -40,12 +41,12 @@ export function CommandCenter({ wallet, loading, usdRate }: CommandCenterProps) 
               <Skeleton className="h-8 w-32 bg-white/10" />
             ) : (
               <span className={`text-[22px] sm:text-[32px] font-bold leading-none transition-all duration-300 truncate ${!showBalance && "blur-lg"}`}>
-                {showBalance ? formatUsd(convertToUsd(displayBalance, wallet?.currency === 'USD' ? 'USD' : 'NGN', usdRate)) : "•••••••"}
+                {showBalance ? formatUsd(usdBalance) : "•••••••"}
               </span>
             )}
           </div>
 
-          {wallet?.currency !== 'USD' && usdRate && displayBalance > 0 && <p className="mb-3 text-[10px] text-[#B7BEC5]">Converted from {wallet.currency} at the live FX rate</p>}
+          {usdRate && displayBalance > 0 && <p className="mb-3 text-[10px] text-[#B7BEC5]">USD balance · live FX conversion</p>}
           <button 
             onClick={() => router.push('/finances')} 
             className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-[#8F7650] bg-[#2A2520] px-3 py-1.5 text-[10px] font-bold text-[#F3DFC0] mb-4 sm:mb-6 hover:bg-[#3A3028] transition-all active:scale-95"
