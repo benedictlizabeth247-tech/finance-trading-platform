@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Plus, Send, Landmark, CreditCard, ChevronRight } from 'lucide-react'
+import { convertToUsd, formatUsd } from '@/services/currencyService'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Wallet } from '@/types'
@@ -35,18 +36,16 @@ export function CommandCenter({ wallet, loading, usdRate }: CommandCenterProps) 
           </div>
           
           <div className="flex items-baseline gap-0.5 sm:gap-1 mb-2 sm:mb-4 overflow-hidden">
-            <span className="text-[18px] sm:text-[28px] font-bold leading-none">₦</span>
             {loading ? (
               <Skeleton className="h-8 w-32 bg-white/10" />
             ) : (
               <span className={`text-[22px] sm:text-[32px] font-bold leading-none transition-all duration-300 truncate ${!showBalance && "blur-lg"}`}>
-                {showBalance ? Number(displayBalance).toLocaleString() : "•••••••"}
+                {showBalance ? formatUsd(convertToUsd(displayBalance, wallet?.currency === 'USD' ? 'USD' : 'NGN', usdRate)) : "•••••••"}
               </span>
             )}
-            {showBalance && !loading && <span className="text-[13px] sm:text-[20px] font-bold align-super ml-0.5 opacity-90">.00</span>}
           </div>
 
-          {usdRate && displayBalance > 0 && <p className="mb-3 text-[10px] text-[#B7BEC5]">≈ ${(displayBalance * usdRate).toFixed(2)} USD · live FX reference</p>}
+          {wallet?.currency !== 'USD' && usdRate && displayBalance > 0 && <p className="mb-3 text-[10px] text-[#B7BEC5]">Converted from {wallet.currency} at the live FX rate</p>}
           <button 
             onClick={() => router.push('/finances')} 
             className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-[#8F7650] bg-[#2A2520] px-3 py-1.5 text-[10px] font-bold text-[#F3DFC0] mb-4 sm:mb-6 hover:bg-[#3A3028] transition-all active:scale-95"
