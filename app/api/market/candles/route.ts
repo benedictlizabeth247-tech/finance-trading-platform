@@ -21,8 +21,10 @@ export async function GET(request: Request) {
 
   if (!id) return NextResponse.json({ error: 'missing_id', series: null }, { status: 400 })
 
+  const normalizedId = id.includes('.') ? id : `stock.${id.toUpperCase()}`
+
   try {
-    const series = await getCandles(id, timeframe)
+    const series = await getCandles(normalizedId, timeframe)
     if (!series) {
       return NextResponse.json({ error: 'unknown_asset', series: null }, { status: 404 })
     }
@@ -30,7 +32,7 @@ export async function GET(request: Request) {
   } catch (error) {
     logger.error('GET /api/market/candles failed', { reason: (error as Error).message })
     return NextResponse.json(
-      { series: { id, timeframe, provider: 'yahoo', candles: [] }, degraded: true },
+      { series: { id: normalizedId, timeframe, provider: 'unavailable', candles: [] }, degraded: true },
       { status: 200, headers: { 'cache-control': 'no-store' } },
     )
   }

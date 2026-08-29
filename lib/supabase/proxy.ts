@@ -53,6 +53,7 @@ export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl
   const isPublicPath =
     pathname.startsWith('/auth') ||
+    pathname.startsWith('/api/market') ||
     pathname === '/finances' ||
     pathname.startsWith('/_next') ||
     pathname === '/favicon.ico'
