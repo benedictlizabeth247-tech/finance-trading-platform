@@ -72,7 +72,7 @@ export function InviteDialog({ trigger }: InviteDialogProps) {
               Grow the <span className="font-light">nex</span><span className="font-bold">Monie</span> Circle
             </DialogTitle>
             <p className="text-[14px] text-gray-500 font-medium px-4 mt-2 leading-relaxed">
-              Invite your trusted network and receive ₦2,500 for every successful activation.
+              Invite your trusted network and receive a USD reward for every successful activation.
             </p>
           </DialogHeader>
 

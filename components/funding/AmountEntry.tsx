@@ -12,7 +12,7 @@ type Props = {
   max?: number
 }
 
-export function AmountEntry({ value, onChange, currency = 'NGN', label = 'Enter amount', available, max = 12 }: Props) {
+export function AmountEntry({ value, onChange, currency = 'USD', label = 'Enter amount', available, max = 12 }: Props) {
   const press = (key: string) => {
     if (key === 'back') return onChange(value.slice(0, -1))
     if (key === '.') {
