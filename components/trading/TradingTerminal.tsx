@@ -73,7 +73,8 @@ export function TradingTerminal({ mode }: { mode: TradingMode }) {
   const notional = orderQuantity * orderPrice
   const requiredMargin = mode === "futures" ? notional / Math.max(leverage, 1) : notional
   const estimatedFee = notional * 0.001
-  const estimatedLiquidation = mode === "futures" && orderPrice > 0 ? orderPrice * (side === "buy" ? 1 - (1 / Math.max(leverage, 1)) + 0.005 : 1 + (1 / Math.max(leverage, 1)) - 0.005) : 0
+  const hasValidFuturesOrder = mode === "futures" && orderQuantity > 0 && orderPrice > 0 && leverage > 1 && balance > 0
+  const estimatedLiquidation = hasValidFuturesOrder ? orderPrice * (side === "buy" ? 1 - (1 / leverage) + 0.005 : 1 + (1 / leverage) - 0.005) : 0
   const activePositions=positions.filter(p=>p.status==='open')
   const currentPnl=activePositions.reduce((sum,p)=>sum+pnlFor(p),0)
   const choose=(id:string)=>{setSelectedId(id);setQuery("");setShowMarkets(false);setNotice(null)}
