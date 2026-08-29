@@ -17,9 +17,11 @@ import { getProfile } from '@/services/profileService'
 import { getWallet, getTransactions, type Wallet as WalletType, type WalletTransaction } from '@/services/walletService'
 import { getTradingAccount, type TradingAccount } from '@/services/internalTradingService'
 import { createClient } from '@/lib/supabase/client'
+import { getFxRate, convertToUsd, formatUsd } from '@/services/currencyService'
 import type { Profile } from '@/types/database'
 
-const money = (n:number, currency='NGN') => new Intl.NumberFormat('en-NG',{style:'currency',currency,maximumFractionDigits:2}).format(Number(n||0))
+const money = (n:number, rate:number|null) => formatUsd(convertToUsd(Number(n||0), 'NGN', rate))
+const naira = (n:number, rate:number|null) => rate && Number.isFinite(n) ? `₦${(Number(n||0)).toLocaleString('en-NG', { maximumFractionDigits: 2 })}` : 'NGN unavailable'
 
 type AssetTab = 'overview' | 'spot' | 'futures' | 'funding'
 
@@ -39,13 +41,14 @@ export default function ProfileScreen() {
   const [logoutOpen, setLogoutOpen] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
   const [theme, setTheme] = useState<'light'|'dark'>('light')
+  const [ngnToUsd, setNgnToUsd] = useState<number | null>(null)
 
   const load = async () => {
     if (!user) return
     setLoading(true)
     try {
-      const [p,w,a,t] = await Promise.all([getProfile(), getWallet(), getTradingAccount(), getTransactions(8)])
-      setProfile(p); setWallet(w); setAccount(a); setTransactions(t)
+      const [p,w,a,t,fx] = await Promise.all([getProfile(), getWallet(), getTradingAccount(), getTransactions(8), getFxRate('NGN', 'USD')])
+      setProfile(p); setWallet(w); setAccount(a); setTransactions(t); setNgnToUsd(fx?.rate ?? null)
     } finally { setLoading(false) }
   }
   useEffect(() => { void load() }, [user])
@@ -111,7 +114,7 @@ export default function ProfileScreen() {
           </div>
           <div className="mt-4 rounded-2xl bg-[#183A36] p-4 text-white">
             <div className="flex items-center justify-between"><p className="text-[9px] uppercase tracking-[.18em] text-white/60">Total estimated balance</p><button onClick={()=>setShowBalance(v=>!v)}>{showBalance?<Eye size={16}/>:<EyeOff size={16}/>}</button></div>
-            <p className="mt-2 text-[29px] font-black tracking-tight">{loading ? '••••••' : showBalance ? money(total, wallet?.currency || 'NGN') : '••••••••'}</p>
+            <p className="mt-2 text-[29px] font-black tracking-tight">{loading ? '••••••' : showBalance ? money(total, ngnToUsd) : '••••••••'}</p>
             <p className="mt-1 text-[9px] text-white/55">Funding + Spot + Futures account balances</p>
             <div className="mt-4 grid grid-cols-2 gap-2">
               <button onClick={()=>router.push('/fund-account')} className="flex items-center justify-center gap-1.5 rounded-xl bg-[#16A36A] py-2.5 text-[10px] font-black"><ArrowDownToLine size={14}/> Deposit / Fund</button>
@@ -131,7 +134,7 @@ export default function ProfileScreen() {
         </Card>
 
         <section className="grid grid-cols-3 gap-2">
-          {[['Funding',balances.funding,'funding'],['Spot',balances.spot,'spot'],['Futures',balances.futures,'futures']].map(([label,value,key])=><button key={String(key)} onClick={()=>setTab(key as AssetTab)} className={cn('rounded-2xl border p-3 text-left bg-white',tab===key?'border-[#087F5B]':'border-[#D6E1DE]')}><p className="text-[9px] text-[#708A85]">{label}</p><p className="mt-1 text-[13px] font-black truncate">{showBalance?money(Number(value),wallet?.currency||'NGN'):'••••'}</p></button>)}
+          {[['Funding',balances.funding,'funding'],['Spot',balances.spot,'spot'],['Futures',balances.futures,'futures']].map(([label,value,key])=><button key={String(key)} onClick={()=>setTab(key as AssetTab)} className={cn('rounded-2xl border p-3 text-left bg-white',tab===key?'border-[#087F5B]':'border-[#D6E1DE]')}><p className="text-[9px] text-[#708A85]">{label}</p><p className="mt-1 text-[13px] font-black truncate">{showBalance?money(Number(value), ngnToUsd):'••••'}</p></button>)}
         </section>
 
         <Card className="rounded-[26px] border-[#D6E1DE] bg-white p-4 shadow-none">
@@ -144,7 +147,7 @@ export default function ProfileScreen() {
 
         <Card className="rounded-[26px] border-[#D6E1DE] bg-white p-4 shadow-none">
           <div className="flex items-center justify-between"><div><p className="text-[11px] font-black">Recent account activity</p><p className="text-[9px] text-[#708A85]">Deposits, transfers, payments and wallet events</p></div><button onClick={()=>router.push('/transactions')}><ChevronRight size={17} className="text-[#708A85]"/></button></div>
-          <div className="mt-3 space-y-2">{transactions.slice(0,5).map(tx=><div key={tx.id} className="flex items-center justify-between rounded-xl bg-[#F5F8F7] p-3"><div><p className="text-[10px] font-bold">{tx.title}</p><p className="text-[8px] text-[#708A85]">{new Date(tx.created_at).toLocaleString()}</p></div><span className={cn('text-[10px] font-black',tx.amount>=0?'text-[#16A36A]':'text-[#B94A48]')}>{tx.amount>=0?'+':''}{money(tx.amount, wallet?.currency||'NGN')}</span></div>)}{!transactions.length&&<p className="rounded-xl bg-[#F5F8F7] p-4 text-[9px] text-[#708A85]">No account activity yet.</p>}</div>
+          <div className="mt-3 space-y-2">{transactions.slice(0,5).map(tx=><div key={tx.id} className="flex items-center justify-between rounded-xl bg-[#F5F8F7] p-3"><div><p className="text-[10px] font-bold">{tx.title}</p><p className="text-[8px] text-[#708A85]">{new Date(tx.created_at).toLocaleString()}</p></div><span className={cn('text-[10px] font-black',tx.amount>=0?'text-[#16A36A]':'text-[#B94A48]')}>{tx.amount>=0?'+':''}{money(tx.amount, ngnToUsd)}</span></div>)}{!transactions.length&&<p className="rounded-xl bg-[#F5F8F7] p-4 text-[9px] text-[#708A85]">No account activity yet.</p>}</div>
         </Card>
 
         <section className="space-y-2">
@@ -162,7 +165,7 @@ export default function ProfileScreen() {
           <label className="ml-1 text-[9px] font-black uppercase tracking-[.16em] text-[#708A85]">Preferences & security</label>
           <Card className="overflow-hidden rounded-[26px] border-[#D6E1DE] bg-white shadow-none divide-y divide-[#EEF2F1]">
             <ProfileOption icon={<Languages/>} title="Language" subtitle={profile?.preferred_language || 'English'} />
-            <ProfileOption icon={<Globe/>} title="Currency display" subtitle={wallet?.currency || 'NGN'} />
+            <ProfileOption icon={<Globe/>} title="Currency display" subtitle={ngnToUsd ? `USD primary · ${naira(displayed, ngnToUsd)} reference` : 'USD primary · NGN reference unavailable'} />
             <ProfileOption icon={<Lock/>} title="Transaction PIN" subtitle="Change your secure PIN" />
             <ProfileOption icon={<SlidersHorizontal/>} title="Security settings" subtitle="Authentication and account controls" />
             <div className="flex items-center justify-between p-4"><div><p className="text-[11px] font-bold">Push notifications</p><p className="text-[9px] text-[#708A85]">Trade, deposit and account events</p></div><Switch checked={notifications} onCheckedChange={setNotifications}/></div>
