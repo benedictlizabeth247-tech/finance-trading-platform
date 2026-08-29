@@ -22,7 +22,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid order request' }, { status: 400 })
     }
 
-    const quoteId = symbol.includes('.') ? symbol : `crypto.${symbol.replace('/', '')}`
+    const quoteId = symbol.includes('.') ? symbol : symbol.includes('/') ? `crypto.${symbol.replace('/', '').toUpperCase()}` : `stock.${symbol.toUpperCase()}`
     const market = await getQuotes([quoteId])
     const quote = market.quotes.find((q) => q.id === quoteId)
     const executionPrice = Number(quote?.price ?? 0)
