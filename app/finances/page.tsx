@@ -5,7 +5,7 @@ import { ArrowLeft, Check, ChevronRight, Search, Wallet } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { BottomNav } from "@/components/layout/BottomNav"
 import { useLiveQuotes } from "@/hooks/use-market-data"
-import { assetIconUrl } from "@/services/market-data/symbols"
+import { assetIconUrl, STOCK_UNIVERSE } from "@/services/market-data/symbols"
 
 const investors = [
   { name: "Nancy Tracker", firm: "Bridgewater Associates", performance: "+28.4%", risk: "Moderate", logo: "https://logo.clearbit.com/bridgewater.com", holdings: [["AAPL", "Apple"], ["MSFT", "Microsoft"], ["GOOGL", "Alphabet"], ["AMZN", "Amazon"]] },
@@ -24,9 +24,11 @@ export default function FinancesScreen() {
   const [funding, setFunding] = useState<"live" | "demo">("live")
   const [done, setDone] = useState(false)
   const balance = 0
-  const symbols = selected?.holdings.map(([symbol]) => `stock.${symbol}`) ?? []
+  // Prices come from the full supported stock universe, not only a pilot's holdings.
+  // This keeps every stock row market-aware and lets the feed update independently.
+  const symbols = STOCK_UNIVERSE.map(({ symbol }) => `stock.${symbol}`)
   const { quotes, isLoading, isDegraded } = useLiveQuotes(symbols)
-  const quoteBySymbol = useMemo(() => Object.fromEntries(Object.values(quotes).map((q) => [q.symbol, q])), [quotes])
+  const quoteBySymbol = useMemo(() => Object.fromEntries(Object.values(quotes).flatMap((q) => [[q.symbol.toUpperCase(), q], [q.id, q], [`stock.${q.symbol.toUpperCase()}`, q]])), [quotes])
   const visible = investors.filter((item) => `${item.name} ${item.firm}`.toLowerCase().includes(query.toLowerCase()))
   const entered = Number(amount || 0)
   const selectInvestor = (investor: (typeof investors)[number]) => { setSelected(investor); setStep(2) }
