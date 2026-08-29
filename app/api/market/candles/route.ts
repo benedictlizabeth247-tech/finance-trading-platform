@@ -21,7 +21,7 @@ export async function GET(request: Request) {
 
   if (!id) return NextResponse.json({ error: 'missing_id', series: null }, { status: 400 })
 
-  const normalizedId = id.includes('.') ? id : `stock.${id.toUpperCase()}`
+  const normalizedId = id.includes('.') ? id : id.includes('/') ? `crypto.${id.replace('/', '').toUpperCase()}` : `stock.${id.toUpperCase()}`
 
   try {
     const series = await getCandles(normalizedId, timeframe)
