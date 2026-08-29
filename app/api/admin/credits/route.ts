@@ -12,8 +12,8 @@ export async function POST(request: Request) {
   const userId = typeof body?.userId === "string" ? body.userId : ""
   const amount = Number(body?.amount)
   const reason = typeof body?.reason === "string" ? body.reason.trim() : ""
-  const demo = body?.demo === true
-  if (!userId || !Number.isFinite(amount) || amount === 0 || Math.abs(amount) > 100000000 || reason.length < 3) return NextResponse.json({ error: "Enter a valid amount and reason." }, { status: 400 })
+  const demo = true
+  if (!userId || !Number.isFinite(amount) || amount === 0 || Math.abs(amount) > 10000 || reason.length < 3) return NextResponse.json({ error: "Enter a valid test-credit amount up to $10,000 and reason." }, { status: 400 })
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!key) return NextResponse.json({ error: "Admin service role is not configured." }, { status: 503 })
   const admin = createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key, { auth: { autoRefreshToken: false, persistSession: false } })
