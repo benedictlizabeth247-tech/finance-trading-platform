@@ -19,21 +19,24 @@ import { BottomNav } from '@/components/layout/BottomNav'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { getSavingsOverview, getActivePlans, type SavingsPlan, type SavingsType } from '@/services/savingsService'
+import { getFxRate, convertToUsd, formatUsd } from '@/services/currencyService'
 
 export default function SavingsWorkflow() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [overview, setSavingsOverview] = useState<any>(null)
   const [plans, setPlans] = useState<SavingsPlan[]>([])
+  const [ngnToUsd, setNgnToUsd] = useState<number | null>(null)
   
   const [stage, setStage] = useState<'overview' | 'create-type' | 'create-input' | 'success'>('overview')
   const [selectedType, setSelectedType] = useState<SavingsType | null>(null)
 
   useEffect(() => {
     async function fetchData() {
-      const [ov, pl] = await Promise.all([getSavingsOverview(), getActivePlans()])
+      const [ov, pl, fx] = await Promise.all([getSavingsOverview(), getActivePlans(), getFxRate('NGN', 'USD')])
       setSavingsOverview(ov)
       setPlans(pl)
+      setNgnToUsd(fx?.rate ?? null)
       setLoading(false)
     }
     fetchData()
@@ -61,11 +64,11 @@ export default function SavingsWorkflow() {
                 <ShieldCheck size={12} className="text-emerald-500" />
               </div>
               <h2 className="text-[32px] font-black italic tracking-tighter mb-4">
-                ₦{loading ? "---" : Number(overview?.totalSavings).toLocaleString()}
+                {loading ? "—" : formatUsd(convertToUsd(Number(overview?.totalSavings), 'NGN', ngnToUsd))}
               </h2>
               <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs bg-emerald-500/10 w-fit px-3 py-1.5 rounded-full">
                 <TrendingUp size={12} />
-                +₦{Number(overview?.interestEarned).toLocaleString()} Interest
+                +{formatUsd(convertToUsd(Number(overview?.interestEarned), 'NGN', ngnToUsd))} Interest
               </div>
             </div>
           </Card>
@@ -104,7 +107,7 @@ export default function SavingsWorkflow() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-black italic text-[#1A1A1A]">₦{plan.balance.toLocaleString()}</p>
+                      <p className="font-black italic text-[#1A1A1A]">{formatUsd(convertToUsd(plan.balance, 'NGN', ngnToUsd))}</p>
                       <ArrowRight size={16} className="ml-auto text-gray-200" />
                     </div>
                   </Card>
