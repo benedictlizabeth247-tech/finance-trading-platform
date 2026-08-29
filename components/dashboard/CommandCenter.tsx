@@ -10,9 +10,10 @@ import { Wallet } from '@/types'
 interface CommandCenterProps {
   wallet: Wallet | null;
   loading: boolean;
+  usdRate?: number | null;
 }
 
-export function CommandCenter({ wallet, loading }: CommandCenterProps) {
+export function CommandCenter({ wallet, loading, usdRate }: CommandCenterProps) {
   const router = useRouter()
   const [showBalance, setShowBalance] = useState(true)
 
@@ -45,6 +46,7 @@ export function CommandCenter({ wallet, loading }: CommandCenterProps) {
             {showBalance && !loading && <span className="text-[13px] sm:text-[20px] font-bold align-super ml-0.5 opacity-90">.00</span>}
           </div>
 
+          {usdRate && displayBalance > 0 && <p className="mb-3 text-[10px] text-[#B7BEC5]">≈ ${(displayBalance * usdRate).toFixed(2)} USD · live FX reference</p>}
           <button 
             onClick={() => router.push('/finances')} 
             className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-[#8F7650] bg-[#2A2520] px-3 py-1.5 text-[10px] font-bold text-[#F3DFC0] mb-4 sm:mb-6 hover:bg-[#3A3028] transition-all active:scale-95"
