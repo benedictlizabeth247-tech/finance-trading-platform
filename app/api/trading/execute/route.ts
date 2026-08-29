@@ -53,6 +53,8 @@ export async function POST(request: Request) {
       p_quantity: quantity,
       p_execution_price: executionPrice,
       p_leverage: leverage,
+      p_take_profit: takeProfit,
+      p_stop_loss: stopLoss,
     })
     if (error) return NextResponse.json({ error: error.message }, { status: 400 })
     return NextResponse.json({ ...data, execution_price: executionPrice, provider: quote.provider, timestamp: quote.timestamp }, { headers: { 'cache-control': 'no-store' } })
